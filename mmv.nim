@@ -13,37 +13,37 @@ File name
 [N]     file(N)ame
 [n]     (n)umber
 [Nx:y]  name from pos x to pos y 
-# [Nx:]  name from pos x to end
+[Nx:]  name from pos x to end
 [N:y]  name from start to pos y
 [Nx]    char at position x
 
 [E]     file ending (like: .png, .jpeg)
 [Ex:y]     file ending (like: .png, .jpeg)
-# [Ex:]     file ending (like: .png, .jpeg)
+[Ex:]     file ending (like: .png, .jpeg)
 # [Cx]     count
 
 
-Time (extracted from the renamed file)
+Time (modification time, extracted from file)
 ===========================
 
-# [iso]
-# [isot]
-# [YY]     year 2 chars (like: 18, 19, 20)
-# [YYYY]   year 4 chars (like: 2018, 2019, 2020)
-# [M]      month in digest (like 9, 10, 11)
-# [MM]     month in digest (like 09, 10, 11)
-# [MMM]    month, short form (like: Jan, Sep, Oct)
-# [MMMM]   month, long form (like: January, September, October)
-# [D]      day of the month, (like: 9, 10, 11)
-# [DD]     day of the month, (like: 09, 10, 11)
-# [DDD]    day name, (like: Fr, Sa, So)
-# [DDDD]   day name, (like: Friday, Saturday, Sunday)
-# [h]      hour, (like: 9, 10, 11)
-# [hh]     hour, (like: 09, 10, 11)
-# [m]      minute, (like: 9, 10, 11)
-# [mm]     minute, (like: 09, 10, 11)
-# [s]      second, (like: 9, 10, 11)
-# [ss]     second, (like: 09, 10, 11)
+[iso]    yyyy-MM-dd HH:mm:ss
+[isot]   yyyy-MM-dd'T'HH:mm:ss
+[YY]     year 2 chars (like: 18, 19, 20)
+[YYYY]   year 4 chars (like: 2018, 2019, 2020)
+[M]      month in digest (like 9, 10, 11)
+[MM]     month in digest (like 09, 10, 11)
+[MMM]    month, short form (like: Jan, Sep, Oct)
+[MMMM]   month, long form (like: January, September, October)
+[D]      day of the month, (like: 9, 10, 11)
+[DD]     day of the month, (like: 09, 10, 11)
+[DDD]    day of the week name, (like: Fr, Sa, So)
+[DDDD]   day of the week name, (like: Friday, Saturday, Sunday)
+[h]      hour, (like: 9, 10, 11)
+[hh]     hour, (like: 09, 10, 11)
+[m]      minute, (like: 9, 10, 11)
+[mm]     minute, (like: 09, 10, 11)
+[s]      second, (like: 9, 10, 11)
+[ss]     second, (like: 09, 10, 11)
 """
 
 template yop() =
@@ -116,9 +116,9 @@ proc dmmv(input, pattern: string, idx = 0): string =
   if pattern == "": return ""
   let (dir, file, ext) = splitFile(input)
 
-  var creationTime: Time 
+  var modificationTime: Time 
   if fileExists(input):
-    creationTime = getCreationTime(input)
+    modificationTime = getLastModificationTime(input)
   for tok in tokenize(pattern):
     # echo tok
     result.add tok.text
@@ -129,6 +129,42 @@ proc dmmv(input, pattern: string, idx = 0): string =
     of "E": 
       result.add ext
       continue
+    of "isot":
+      result.add modificationTime.format("yyyy-MM-dd'T'HH:mm:ss")
+    of "iso":
+      result.add modificationTime.format("yyyy-MM-dd HH:mm:ss")
+    of "YY":
+      result.add modificationTime.format("yy")
+    of "YYYY":
+      result.add modificationTime.format("yyyy")
+    of "M":
+      result.add modificationTime.format("M")
+    of "MM":
+      result.add modificationTime.format("MM")
+    of "MMM":
+      result.add modificationTime.format("MMM")
+    of "MMMM":
+      result.add modificationTime.format("MMMM")
+    of "D":
+      result.add modificationTime.format("d")
+    of "DD":
+     result.add modificationTime.format("dd")
+    of "DDD":
+      result.add modificationTime.format("ddd")
+    of "DDDD":
+     result.add modificationTime.format("dddd")
+    of "h":
+      result.add modificationTime.format("H")
+    of "hh":
+     result.add modificationTime.format("HH")
+    of "m":
+      result.add modificationTime.format("m")
+    of "mm":
+     result.add modificationTime.format("mm")
+    of "s":
+      result.add modificationTime.format("s")
+    of "ss":
+     result.add modificationTime.format("ss")
 
     # one char range
     var toadd: string 
@@ -138,6 +174,7 @@ proc dmmv(input, pattern: string, idx = 0): string =
       toadd = ext
     
     if tok.op.len > 0:
+      # range x:y
       var rngStr = tok.op[1..^1]
       if rngStr.contains(":"):
         var rng = rngStr.split(":")
@@ -208,10 +245,7 @@ when isMainModule:
       check dmmv("foa.ext", "[E0:1]") == ".e"
       check dmmv("foa.ext", "[N0:2][E]") == "foa.ext"
       check dmmv("foa.ext", "[E1:]") == "ext"
+      check dmmv("foa.ext", "[E:1]") == ".e"
 
     #   check dmmv("foa.ext", "[N-0][E]") == "a.ext"
     #   check dmmv("foa.ext", "[N-1][N1[E]") == "oo.ext"
-
-
-# [n][e]
-
