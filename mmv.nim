@@ -94,12 +94,12 @@ proc strRange(str, a, b: string): string =
   var ai: int
   var bi: int
 
-  ## N:y
-  if a == "":
-    ai = parseInt(a)
-    return str[0..ai]
-  
   ## Nx:
+  if a == "":
+    bi = parseInt(b)
+    return str[0..bi]
+  
+  ## N:y
   if b == "":
     ai = parseInt(a)
     return str[ai..^1]
@@ -180,8 +180,6 @@ when isMainModule:
     test "escaped":
       check toSeq(tokenize("\\[foo\\]")) == @[("[foo]", "")]
       check toSeq(tokenize("""\\""")) == @[("""\""", "")]
-      # check tokenize("[foo]") == @[("", "[foo]")]
-      # check tokenize("[foo]") == @[("", "[foo]")]
   suite "mmv":
     test "empty":
       check dmmv("foo.ext", "") == ""
@@ -194,9 +192,10 @@ when isMainModule:
       check dmmv("foo.ext", "[N]") == "foo"
       check dmmv("foo.ext", "[E][E]") == ".ext.ext"
       check dmmv("foo.ext", "[E]_[E]") == ".ext_.ext"
-    test "one char impl":
-      # check strRange("foa", "0", "") == "f"
-      # check strRange("foa", "0", "") == "f"
+    test "one char impl (empty)":
+      check strRange("foa", "1", "") == "oa"
+      check strRange("foa", "", "1") == "fo"
+    test "one char impl (range)":
       check strRange("foa", "0", "2") == "foa"
       check strRange("foa", "0", "1") == "fo"
       check strRange("foa", "0", "0") == "f"
