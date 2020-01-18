@@ -1,10 +1,11 @@
-import strutils, os, times, cligen, glob
+import strutils, os, times
+import cligen, glob
 const help = """
 
 Usage
 ======
 
-mmv *.mp3 [n][N][E]
+mmv *.mp3 [N][E]
 
 
 File name
@@ -187,11 +188,11 @@ proc dmmv(input, pattern: string, idx = 0): string =
         except:
           result.add toadd
 
-proc cli(filePatter, renamePattern: string, usage = false, doit = false) = 
+proc cli(filePattern, renamePattern: string, usage = false, doit = false) = 
   if usage:
     echo help
     quit()
-  for path in walkGlob(filePatter):
+  for path in walkGlob(filePattern):
     # every file in `src` or its subdirectories, lazily
     let oldname = path
     let newname = path.dmmv(renamePattern)
@@ -200,7 +201,12 @@ proc cli(filePatter, renamePattern: string, usage = false, doit = false) =
       moveFile(oldname, newname)
 
 if paramCount() > 0:
-  dispatch(cli, help = {"usage": "print usage"})
+  dispatch(cli, help = {
+    "filePattern": "glob syntax: *.mp3 foo*.mp3",
+    "renamePattern": "like: [N]_foo_[E]",
+    "usage": "print usage",
+    "doit": "actually rename files",
+  })
 
 when isMainModule:
   import unittest, sequtils
