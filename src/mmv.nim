@@ -2,49 +2,7 @@ import strutils, os, times
 import cligen, glob
 const help = """
 
-Usage
-======
 
-mmv *.mp3 [N][E]
-
-
-File name
-==========
-
-[N]     file(N)ame
-[n]     (n)umber
-[Nx:y]  name from pos x to pos y 
-[Nx:]  name from pos x to end
-[N:y]  name from start to pos y
-[Nx]    char at position x
-
-[E]     file ending (like: .png, .jpeg)
-[Ex:y]     file ending (like: .png, .jpeg)
-[Ex:]     file ending (like: .png, .jpeg)
-# [Cx]     count
-
-
-Time (modification time, extracted from file)
-===========================
-
-[iso]    yyyy-MM-dd HH:mm:ss
-[isot]   yyyy-MM-dd'T'HH:mm:ss
-[YY]     year 2 chars (like: 18, 19, 20)
-[YYYY]   year 4 chars (like: 2018, 2019, 2020)
-[M]      month in digest (like 9, 10, 11)
-[MM]     month in digest (like 09, 10, 11)
-[MMM]    month, short form (like: Jan, Sep, Oct)
-[MMMM]   month, long form (like: January, September, October)
-[D]      day of the month, (like: 9, 10, 11)
-[DD]     day of the month, (like: 09, 10, 11)
-[DDD]    day of the week name, (like: Fr, Sa, So)
-[DDDD]   day of the week name, (like: Friday, Saturday, Sunday)
-[h]      hour, (like: 9, 10, 11)
-[hh]     hour, (like: 09, 10, 11)
-[m]      minute, (like: 9, 10, 11)
-[mm]     minute, (like: 09, 10, 11)
-[s]      second, (like: 9, 10, 11)
-[ss]     second, (like: 09, 10, 11)
 """
 
 template yop() =
@@ -116,7 +74,7 @@ proc strRange(str, a, b: string): string =
 proc dmmv(input, pattern: string, idx = 0): string =
   if pattern == "": return ""
   let (dir, file, ext) = splitFile(input)
-
+  result = dir / ""
   var modificationTime: Time 
   if fileExists(input):
     modificationTime = getLastModificationTime(input)
@@ -188,25 +146,73 @@ proc dmmv(input, pattern: string, idx = 0): string =
         except:
           result.add toadd
 
-proc cli(filePattern, renamePattern: string, usage = false, doit = false) = 
-  if usage:
-    echo help
-    quit()
+proc cli(filePattern, renamePattern: string, doit = false) = 
   for path in walkGlob(filePattern):
-    # every file in `src` or its subdirectories, lazily
     let oldname = path
     let newname = path.dmmv(renamePattern)
     echo path, " -> " , newname
     if doit:
       moveFile(oldname, newname)
 
-if paramCount() > 0:
-  dispatch(cli, help = {
-    "filePattern": "glob syntax: *.mp3 foo*.mp3",
-    "renamePattern": "like: [N]_foo_[E]",
-    "usage": "print usage",
-    "doit": "actually rename files",
-  })
+# if paramCount() > 0:
+dispatch(cli, help = {
+  "filePattern": "glob syntax: *.mp3 foo*.mp3",
+  "renamePattern": "like: [N]_foo_[E]",
+  "usage": "print usage",
+  "doit": "actually rename files",
+  # "help": help
+  } , doc = 
+  """
+  
+Usage Examples:
+===============
+
+
+  mmv -f *.mp3  -r [N][E]
+  mmv -f *.jpeg -r [N].jpg # rename all *.jpegs to *.jpg
+  mmv -f *.jpg -r [N]__[YYYY].[MM].[DD]__[E] # adds a timestamp to the file
+  mmv -f *.foo.bak -r [N] # removes the .bak
+
+
+Rename Patterns
+===============
+
+  [N]     file(N)ame
+  [n]     (n)umber
+  [Nx:y]  name from pos x to pos y 
+  [Nx:]  name from pos x to end
+  [N:y]  name from start to pos y
+  [Nx]    char at position x
+
+  [E]     file ending (like: .png, .jpeg)
+  [Ex:y]     file ending (like: .png, .jpeg)
+  [Ex:]     file ending (like: .png, .jpeg)
+  # [Cx]     count
+
+
+  Time (modification time, extracted from file)
+  =============================================
+
+  [iso]    yyyy-MM-dd HH:mm:ss
+  [isot]   yyyy-MM-dd'T'HH:mm:ss
+  [YY]     year 2 chars (like: 18, 19, 20)
+  [YYYY]   year 4 chars (like: 2018, 2019, 2020)
+  [M]      month in digest (like 9, 10, 11)
+  [MM]     month in digest (like 09, 10, 11)
+  [MMM]    month, short form (like: Jan, Sep, Oct)
+  [MMMM]   month, long form (like: January, September, October)
+  [D]      day of the month, (like: 9, 10, 11)
+  [DD]     day of the month, (like: 09, 10, 11)
+  [DDD]    day of the week name, (like: Fr, Sa, So)
+  [DDDD]   day of the week name, (like: Friday, Saturday, Sunday)
+  [h]      hour, (like: 9, 10, 11)
+  [hh]     hour, (like: 09, 10, 11)
+  [m]      minute, (like: 9, 10, 11)
+  [mm]     minute, (like: 09, 10, 11)
+  [s]      second, (like: 9, 10, 11)
+  [ss]     second, (like: 09, 10, 11)
+  """)
+
 
 when isMainModule:
   import unittest, sequtils
